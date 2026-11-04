@@ -1,0 +1,1992 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+     <meta charset="utf-8">
+     <meta name="viewport" content="width=device-width,initial-scale=1">
+     <meta name="theme-color" content="#f3efe5">
+     <title>Ruang — Live classroom questions · PDT06</title>
+     <!-- RUANG / PDT06. All UI, styles and browser logic live in this file.
+     Edit the CSS variables below to change the palette. The build vendors the local QR encoder.
+     Open ?view=student for the phone UI, ?view=display for the projector.
+     Netlify Functions and Blobs synchronize independent devices. -->
+     <style>
+          :root {
+               --paper: #f3efe5;
+               --sheet: #fcfaf3;
+               --ink: #242d28;
+               --muted: #62685c;
+               --line: #d7d8cb;
+               --accent: #355b40;
+               --lime: #d9e6ac;
+               --danger: #93452c;
+               --font: Trebuchet MS, Arial, Verdana, sans-serif;
+               --serif: Palatino Linotype, Book Antiqua, Georgia, serif;
+               --q-size: 36px;
+               --q-bg: #fcfaf3;
+               --q-ink: #242d28
+          }
+
+          * {
+               box-sizing: border-box
+          }
+
+          body {
+               margin: 0;
+               background: var(--paper);
+               color: var(--ink);
+               font-family: var(--font);
+               font-size: 16px
+          }
+
+          button,
+          input,
+          textarea,
+          select {
+               font: inherit
+          }
+
+          button,
+          a,
+          input,
+          textarea,
+          select {
+               touch-action: manipulation
+          }
+
+          button,
+          a {
+               -webkit-tap-highlight-color: transparent
+          }
+
+          button {
+               cursor: pointer;
+               border: 1px solid var(--line);
+               background: var(--sheet);
+               color: var(--ink);
+               border-radius: 5px;
+               padding: 11px 15px;
+               font-weight: 700;
+               display: inline-flex;
+               align-items: center;
+               justify-content: center;
+               gap: 8px;
+               min-height: 44px
+          }
+
+          button:hover {
+               background: #e6eadc;
+               border-color: #9ba78f
+          }
+
+          button:disabled {
+               opacity: .5;
+               cursor: default
+          }
+
+          button.primary {
+               background: var(--accent);
+               border-color: var(--accent);
+               color: var(--sheet)
+          }
+
+          button.primary:hover {
+               background: #264631
+          }
+
+          button.ghost {
+               background: transparent
+          }
+
+          button.danger {
+               color: var(--danger)
+          }
+
+          a {
+               color: var(--accent)
+          }
+
+          :focus-visible {
+               outline: 3px solid #c07430;
+               outline-offset: 3px
+          }
+
+          input,
+          textarea,
+          select {
+               border: 1px solid #9fa697;
+               border-radius: 5px;
+               background: var(--sheet);
+               color: var(--ink);
+               padding: 12px;
+               min-height: 44px;
+               width: 100%
+          }
+
+          textarea {
+               resize: vertical;
+               line-height: 1.55
+          }
+
+          input[type=range] {
+               padding: 0;
+               accent-color: var(--accent)
+          }
+
+          input[type=checkbox] {
+               width: 20px;
+               min-height: 20px;
+               accent-color: var(--accent)
+          }
+
+          label {
+               display: block;
+               font-size: 13px;
+               font-weight: 700;
+               margin: 0 0 8px
+          }
+
+          h1,
+          h2,
+          h3,
+          p {
+               margin: 0
+          }
+
+          svg {
+               width: 19px;
+               height: 19px;
+               fill: none;
+               stroke: currentColor;
+               stroke-width: 1.7;
+               stroke-linecap: round;
+               stroke-linejoin: round;
+               flex: none
+          }
+
+          .eyebrow {
+               font-size: 11px;
+               letter-spacing: .14em;
+               text-transform: uppercase;
+               font-weight: 700
+          }
+
+          .muted {
+               color: var(--muted)
+          }
+
+          .row {
+               display: flex;
+               align-items: center;
+               gap: 10px
+          }
+
+          .between {
+               justify-content: space-between
+          }
+
+          .wrap {
+               flex-wrap: wrap
+          }
+
+          .small {
+               font-size: 12px;
+               line-height: 1.5
+          }
+
+          .hide,
+          [hidden] {
+               display: none !important
+          }
+
+          .badge {
+               font-size: 11px;
+               font-weight: 700;
+               padding: 5px 8px;
+               background: var(--lime);
+               border-radius: 3px
+          }
+
+          .dot {
+               width: 7px;
+               height: 7px;
+               border-radius: 50%;
+               background: var(--accent);
+               display: inline-block;
+               margin-right: 7px
+          }
+
+          .topbar {
+               min-height: 82px;
+               padding: 15px 30px;
+               display: flex;
+               align-items: center;
+               gap: 25px;
+               border-bottom: 1px solid var(--line)
+          }
+
+          .brand {
+               display: flex;
+               align-items: center;
+               gap: 12px;
+               text-decoration: none;
+               color: var(--ink)
+          }
+
+          .brandmark {
+               width: 38px;
+               height: 38px;
+               background: var(--accent);
+               color: var(--paper);
+               display: grid;
+               place-items: center;
+               border-radius: 50% 50% 3px 50%;
+               font-family: var(--serif);
+               font-size: 27px
+          }
+
+          .brandname {
+               font-size: 25px;
+               letter-spacing: -1px;
+               font-weight: 700
+          }
+
+          .brandname small {
+               font-family: var(--font);
+               font-size: 10px;
+               letter-spacing: .12em;
+               display: block;
+               margin-top: 3px
+          }
+
+          .tabs {
+               display: flex;
+               gap: 5px;
+               margin-left: auto;
+               background: #e6e6da;
+               padding: 4px;
+               border-radius: 6px
+          }
+
+          .tabs a {
+               font-size: 13px;
+               text-decoration: none;
+               color: var(--muted);
+               padding: 10px 15px;
+               border-radius: 3px;
+               min-height: 39px;
+               display: flex;
+               align-items: center;
+               gap: 7px
+          }
+
+          .tabs a.active {
+               background: var(--sheet);
+               color: var(--ink);
+               box-shadow: 0 1px 3px #242d2810
+          }
+
+          .connection {
+               font-size: 12px;
+               max-width: 180px
+          }
+
+          .workspace {
+               padding: 26px 30px 20px;
+               max-width: 1900px;
+               margin: auto
+          }
+
+          .pagehead {
+               display: flex;
+               justify-content: space-between;
+               align-items: end;
+               margin-bottom: 22px;
+               gap: 15px
+          }
+
+          .pagehead h1 {
+               font-family: var(--serif);
+               font-weight: 400;
+               letter-spacing: -1.3px;
+               font-size: 38px;
+               margin-top: 5px
+          }
+
+          .pagehead p {
+               font-size: 13px;
+               margin-top: 8px;
+               color: var(--muted)
+          }
+
+          .display-grid {
+               display: grid;
+               grid-template-columns: minmax(0, 1fr) 310px;
+               gap: 22px;
+               align-items: start
+          }
+
+          .sourcebar {
+               border: 1px solid var(--line);
+               border-bottom: 0;
+               padding: 8px;
+               display: flex;
+               gap: 4px;
+               align-items: center;
+               background: #e9eadf;
+               border-radius: 7px 7px 0 0
+          }
+
+          .sourcebar button {
+               padding: 8px 12px;
+               font-size: 12px;
+               min-height: 38px;
+               border-color: transparent;
+               background: transparent
+          }
+
+          .sourcebar button.active {
+               background: var(--sheet);
+               border-color: var(--line)
+          }
+
+          .sourcebar .expand {
+               margin-left: auto;
+               background: var(--accent);
+               color: var(--sheet)
+          }
+
+          .stage {
+               position: relative;
+               width: 100%;
+               aspect-ratio: 16/10;
+               background: #1f2924;
+               overflow: hidden;
+               isolation: isolate;
+               border: 1px solid #303d32;
+               border-radius: 0 0 7px 7px;
+               container-type: inline-size
+          }
+
+          .stage:fullscreen {
+               width: 100vw;
+               height: 100vh;
+               aspect-ratio: auto;
+               border: 0;
+               border-radius: 0
+          }
+
+          .stage.pseudo-full {
+               position: fixed;
+               inset: 0;
+               width: 100vw;
+               height: 100dvh;
+               z-index: 100;
+               aspect-ratio: auto;
+               border-radius: 0
+          }
+
+          .media-layer {
+               position: absolute;
+               inset: 0;
+               z-index: 0
+          }
+
+          .media-layer iframe,
+          .media-layer video,
+          .media-layer img {
+               width: 100%;
+               height: 100%;
+               border: 0;
+               object-fit: contain
+          }
+
+          .media-layer video.mirror {
+               transform: scaleX(-1)
+          }
+
+          .slide {
+               height: 100%;
+               position: relative;
+               background: #e5e7d5;
+               padding: 5.5%;
+               color: #2b4232;
+               overflow: hidden
+          }
+
+          .slide .slide-top {
+               display: flex;
+               justify-content: space-between;
+               font-size: 10px;
+               letter-spacing: .12em;
+               border-bottom: 1px solid #91a08a;
+               padding-bottom: 16px
+          }
+
+          .slide-title {
+               font-family: var(--serif);
+               font-size: clamp(30px, 5.8cqw, 90px);
+               line-height: 1.05;
+               letter-spacing: -.04em;
+               font-weight: 400;
+               width: 65%;
+               margin-top: 5%
+          }
+
+          .slide-title em {
+               font-weight: 400;
+               color: #61734d
+          }
+
+          .slide-rule {
+               width: 45px;
+               height: 4px;
+               background: #36553b;
+               margin: 22px 0
+          }
+
+          .slide p {
+               font-size: clamp(12px, 1.5cqw, 22px);
+               line-height: 1.5;
+               max-width: 43%
+          }
+
+          .slide-art {
+               position: absolute;
+               right: 5%;
+               top: 24%;
+               width: 30%;
+               height: 46%
+          }
+
+          .slide-foot {
+               position: absolute;
+               bottom: 4%;
+               left: 5.5%;
+               right: 5.5%;
+               font-size: 10px;
+               letter-spacing: .12em;
+               display: flex;
+               justify-content: space-between
+          }
+
+          .stage-corner {
+               position: absolute;
+               top: 14px;
+               left: 16px;
+               z-index: 2;
+               color: #f8f6eb;
+               background: #26352dec;
+               padding: 7px 10px;
+               border: 1px solid #69806b;
+               font-size: 10px;
+               letter-spacing: .12em;
+               border-radius: 3px;
+               pointer-events: none
+          }
+
+          .stage-tools {
+               position: absolute;
+               right: 14px;
+               top: 12px;
+               z-index: 5;
+               display: flex;
+               gap: 6px
+          }
+
+          .stage-tools button {
+               background: #fcfaf3;
+               min-height: 36px;
+               padding: 6px 9px;
+               font-size: 12px;
+               box-shadow: 0 2px 8px #18251d25
+          }
+
+          .question {
+               position: absolute;
+               left: 4%;
+               bottom: 7%;
+               width: 92%;
+               max-width: 100%;
+               min-width: 210px;
+               min-height: 130px;
+               max-height: 80%;
+               background: var(--q-bg);
+               color: var(--q-ink);
+               z-index: 3;
+               border: 2px solid var(--q-ink);
+               border-left: 8px solid #6c8547;
+               box-shadow: 0 8px 24px #17221b30;
+               border-radius: 8px;
+               resize: both;
+               overflow: auto;
+               display: flex;
+               flex-direction: column
+          }
+
+          .q-header {
+               display: flex;
+               align-items: center;
+               gap: 8px;
+               padding: 12px 18px 6px;
+               cursor: grab;
+               touch-action: none;
+               flex: none
+          }
+
+          .q-header:active {
+               cursor: grabbing
+          }
+
+          .q-header .eyebrow {
+               font-size: 10px;
+               opacity: .8
+          }
+
+          .q-meta {
+               margin-left: auto;
+               font-size: 11px;
+               opacity: .8
+          }
+
+          .drag-dots {
+               width: 12px;
+               flex: none
+          }
+
+          .q-text {
+               font-family: Arial, Verdana, sans-serif;
+               font-size: var(--q-size);
+               font-weight: 700;
+               line-height: 1.28;
+               overflow-wrap: anywhere;
+               white-space: pre-wrap;
+               padding: 6px 20px 12px
+          }
+
+          .q-footer {
+               display: flex;
+               align-items: center;
+               justify-content: space-between;
+               padding: 0 18px 12px;
+               gap: 8px;
+               margin-top: auto;
+               flex: none
+          }
+
+          .q-footer button {
+               min-height: 34px;
+               font-size: 12px;
+               padding: 6px 12px;
+               background: var(--q-bg);
+               color: var(--q-ink);
+               border-color: currentColor
+          }
+
+          .q-footer button.resolve {
+               background: #355b40;
+               color: #fcfaf3;
+               border-color: #355b40
+          }
+
+          .q-footer span {
+               font-size: 11px
+          }
+
+          .empty-overlay {
+               position: absolute;
+               bottom: 7%;
+               left: 5%;
+               right: 5%;
+               z-index: 2;
+               display: flex;
+               gap: 13px;
+               align-items: center;
+               background: #fcfaf3f5;
+               color: var(--ink);
+               padding: 17px 20px;
+               border-radius: 7px;
+               border: 1px solid #c7cfb8
+          }
+
+          .empty-overlay strong {
+               display: block;
+               font-size: 16px
+          }
+
+          .empty-overlay p {
+               font-size: 12px;
+               color: var(--muted);
+               margin-top: 4px
+          }
+
+          .history-tray {
+               position: absolute;
+               bottom: 0;
+               left: 0;
+               right: 0;
+               height: 34px;
+               background: #fcfaf3;
+               color: var(--ink);
+               z-index: 4;
+               border-top: 1px solid #aeb9a3;
+               display: flex;
+               flex-direction: column;
+               max-height: 75%
+          }
+
+          .history-handle {
+               height: 34px;
+               min-height: 34px;
+               width: 100%;
+               border: 0;
+               border-radius: 0;
+               padding: 0 16px;
+               justify-content: space-between;
+               background: #e5e9da;
+               cursor: ns-resize;
+               touch-action: none;
+               font-size: 11px
+          }
+
+          .handlebar {
+               width: 34px;
+               height: 3px;
+               background: #8b977e;
+               border-radius: 3px;
+               position: absolute;
+               left: calc(50% - 17px);
+               top: 5px
+          }
+
+          .tray-list {
+               overflow: auto;
+               padding: 12px 18px;
+               display: grid;
+               gap: 8px
+          }
+
+          .tray-item {
+               padding: 10px 0;
+               border-bottom: 1px solid var(--line);
+               display: flex;
+               justify-content: space-between;
+               align-items: center;
+               gap: 15px
+          }
+
+          .tray-item p {
+               font-size: 16px;
+               line-height: 1.4;
+               overflow-wrap: anywhere;
+               white-space: pre-wrap
+          }
+
+          .tray-item button {
+               font-size: 11px;
+               min-height: 34px;
+               padding: 7px 10px;
+               flex: none
+          }
+
+          .understage {
+               display: flex;
+               justify-content: space-between;
+               align-items: center;
+               gap: 12px;
+               margin: 12px 0;
+               font-size: 11px;
+               color: var(--muted)
+          }
+
+          kbd {
+               border: 1px solid #b5bba9;
+               padding: 2px 4px;
+               border-radius: 3px;
+               font-family: inherit;
+               font-size: 10px
+          }
+
+          .sidepanel {
+               border-top: 2px solid var(--ink)
+          }
+
+          .panel-top {
+               display: flex;
+               justify-content: space-between;
+               align-items: center;
+               padding: 15px 0
+          }
+
+          .panel-top h2 {
+               font-size: 17px
+          }
+
+          .panel-top .count {
+               font-family: var(--serif);
+               font-size: 27px
+          }
+
+          .queue {
+               max-height: 390px;
+               overflow: auto;
+               scrollbar-width: thin
+          }
+
+          .queue-card {
+               padding: 14px 13px;
+               border: 1px solid var(--line);
+               border-radius: 5px;
+               margin-bottom: 8px;
+               background: #eeeee3
+          }
+
+          .queue-card.selected {
+               background: var(--sheet);
+               border-left: 3px solid var(--accent)
+          }
+
+          .queue-card p {
+               font-size: 14px;
+               line-height: 1.55;
+               margin: 9px 0;
+               white-space: pre-wrap;
+               overflow-wrap: anywhere
+          }
+
+          .queue-card button {
+               min-height: 30px;
+               font-size: 11px;
+               padding: 5px 9px
+          }
+
+          .queue-empty {
+               padding: 20px 2px 28px;
+               color: var(--muted);
+               font-size: 13px;
+               line-height: 1.7
+          }
+
+          .settings {
+               border-top: 1px solid var(--line);
+               margin-top: 19px;
+               padding-top: 18px
+          }
+
+          .settings summary {
+               cursor: pointer;
+               font-size: 13px;
+               font-weight: 700;
+               list-style-position: outside;
+               margin-bottom: 17px
+          }
+
+          .controlrow {
+               display: grid;
+               grid-template-columns: 1fr 66px;
+               align-items: center;
+               gap: 10px;
+               margin: 12px 0
+          }
+
+          .controlrow label {
+               margin: 0;
+               font-weight: 400
+          }
+
+          .controlrow output {
+               font-size: 12px;
+               text-align: right
+          }
+
+          .setting-group {
+               margin: 15px 0
+          }
+
+          .segmented {
+               display: flex;
+               gap: 6px
+          }
+
+          .segmented button {
+               flex: 1;
+               font-size: 12px;
+               min-height: 38px;
+               padding: 8px
+          }
+
+          .theme-dark {
+               background: #26352d !important;
+               color: #fcfaf3 !important
+          }
+
+          .theme-light {
+               background: #fcfaf3 !important;
+               color: #242d28 !important
+          }
+
+          .subcontrols {
+               display: flex;
+               gap: 8px;
+               flex-wrap: wrap
+          }
+
+          .subcontrols button {
+               font-size: 11px;
+               padding: 8px 10px;
+               min-height: 36px
+          }
+
+          .session-foot {
+               border-top: 1px solid var(--line);
+               margin-top: 24px;
+               padding-top: 13px;
+               display: flex;
+               justify-content: space-between;
+               gap: 12px;
+               font-size: 11px;
+               color: var(--muted)
+          }
+
+          .source-panel {
+               margin: 0 0 10px;
+               padding: 15px;
+               background: #e7eadc;
+               border: 1px solid #bfc9b2;
+               border-radius: 5px
+          }
+
+          .source-panel .row input {
+               flex: 1;
+               min-width: 0;
+               font-size: 13px
+          }
+
+          .source-panel p {
+               font-size: 12px;
+               line-height: 1.6;
+               margin-top: 8px
+          }
+
+          .source-panel select {
+               width: auto;
+               flex: 1
+          }
+
+          .notice {
+               position: fixed;
+               bottom: 22px;
+               left: 50%;
+               transform: translateX(-50%);
+               max-width: calc(100% - 30px);
+               padding: 13px 20px;
+               background: #25392d;
+               color: #fcfaf3;
+               font-size: 14px;
+               border-radius: 6px;
+               box-shadow: 0 4px 20px #1c2d2330;
+               z-index: 1000
+          }
+
+          .student-layout {
+               max-width: 1160px;
+               display: grid;
+               grid-template-columns: 300px minmax(0, 1fr);
+               gap: 65px;
+               margin: 0 auto;
+               padding: 50px 30px 30px
+          }
+
+          .student-intro {
+               position: sticky;
+               top: 30px;
+               align-self: start
+          }
+
+          .student-intro h1 {
+               font-size: 52px;
+               line-height: 1.03;
+               font-weight: 400;
+               letter-spacing: -2px;
+               font-family: var(--serif);
+               margin: 17px 0 20px
+          }
+
+          .student-intro p {
+               font-size: 14px;
+               line-height: 1.7;
+               color: var(--muted);
+               margin: 15px 0
+          }
+
+          .session-code {
+               border-top: 1px solid var(--ink);
+               border-bottom: 1px solid var(--line);
+               margin-top: 30px;
+               padding: 16px 0;
+               display: flex;
+               justify-content: space-between;
+               align-items: center;
+               font-size: 12px
+          }
+
+          .session-code strong {
+               font-family: var(--serif);
+               font-size: 24px;
+               font-weight: 400
+          }
+
+          .discussion-head {
+               display: flex;
+               align-items: center;
+               justify-content: space-between;
+               margin: 0 0 15px;
+               padding-bottom: 15px;
+               border-bottom: 1px solid var(--ink)
+          }
+
+          .discussion-head h2 {
+               font-size: 18px
+          }
+
+          .feed {
+               display: flex;
+               flex-direction: column;
+               gap: 15px;
+               max-height: 46vh;
+               overflow-y: auto;
+               min-height: 140px;
+               padding-right: 5px;
+               scrollbar-width: thin
+          }
+
+          .message {
+               padding: 20px;
+               background: var(--sheet);
+               border: 1px solid var(--line);
+               border-radius: 8px
+          }
+
+          .message p {
+               font-size: 18px;
+               line-height: 1.6;
+               white-space: pre-wrap;
+               overflow-wrap: anywhere;
+               margin-top: 12px
+          }
+
+          .message-meta {
+               display: flex;
+               justify-content: space-between;
+               align-items: center;
+               font-size: 11px;
+               gap: 8px;
+               flex-wrap: wrap
+          }
+
+          .message.resolved {
+               background: #e8ecdf
+          }
+
+          .message .status-tag {
+               padding: 4px 7px;
+               border: 1px solid #aab79d;
+               border-radius: 3px;
+               font-size: 10px
+          }
+
+          .feed-empty {
+               padding: 30px 16px;
+               line-height: 1.6;
+               color: var(--muted)
+          }
+
+          .composer {
+               margin-top: 22px;
+               padding-top: 22px;
+               border-top: 2px solid var(--ink)
+          }
+
+          .composer textarea {
+               font-size: 18px;
+               min-height: 130px
+          }
+
+          .composer label {
+               font-size: 14px
+          }
+
+          .composer-bottom {
+               display: flex;
+               justify-content: space-between;
+               gap: 12px;
+               align-items: center;
+               margin-top: 12px
+          }
+
+          .composer-bottom .small {
+               max-width: 70%;
+               font-size: 11px
+          }
+
+          .composer button {
+               min-width: 120px
+          }
+
+          .privacy-note {
+               display: flex;
+               gap: 9px;
+               align-items: center;
+               color: var(--muted);
+               font-size: 11px;
+               margin-top: 18px
+          }
+
+          .privacy-note svg {
+               width: 14px;
+               height: 14px
+          }
+
+          .mobile-session {
+               display: none
+          }
+
+          .dialog {
+               border: 1px solid var(--line);
+               border-radius: 9px;
+               background: var(--sheet);
+               color: var(--ink);
+               width: min(560px, calc(100% - 30px));
+               padding: 28px;
+               max-height: 85dvh;
+               overflow: auto
+          }
+
+          .dialog::backdrop {
+               background: #17251c90
+          }
+
+          .dialog h2 {
+               font-family: var(--serif);
+               font-weight: 400;
+               font-size: 30px;
+               margin-bottom: 15px
+          }
+
+          .dialog p {
+               font-size: 14px;
+               line-height: 1.7;
+               margin: 12px 0
+          }
+
+          .dialog code {
+               font-size: 12px;
+               overflow-wrap: anywhere
+          }
+
+          .dialog button {
+               margin-top: 12px
+          }
+
+          .dialog .close-dialog {
+               float: right;
+               min-height: 30px;
+               padding: 3px 9px;
+               margin: 0
+          }
+
+          .dialog ol {
+               padding-left: 22px;
+               line-height: 1.8;
+               font-size: 14px
+          }
+
+          .session-tools {
+               border-top: 1px solid var(--line);
+               margin-top: 16px;
+               padding-top: 16px
+          }
+
+          .session-tools .row {
+               flex-wrap: wrap
+          }
+
+          .session-tools .row input {
+               flex: 1 1 240px;
+               min-width: 0
+          }
+
+          .qr-wrap {
+               display: flex;
+               align-items: center;
+               gap: 16px;
+               margin: 14px 0
+          }
+
+          #qr-code {
+               width: 180px;
+               height: 180px;
+               flex: none;
+               display: grid;
+               place-items: center;
+               background: var(--sheet);
+               border: 1px solid var(--line)
+          }
+
+          #qr-code canvas,
+          #qr-code img {
+               display: block;
+               max-width: 100%;
+               max-height: 100%;
+               height: auto
+          }
+
+          .session-state {
+               font-size: 12px;
+               font-weight: 700
+          }
+
+          @media(max-width:480px) {
+               .qr-wrap {
+                    align-items: flex-start;
+                    flex-direction: column
+               }
+          }
+
+          .offline-banner {
+               font-size: 11px;
+               background: #e8e4d4;
+               padding: 8px 30px;
+               color: #555c4c;
+               border-bottom: 1px solid var(--line)
+          }
+
+          .wait-media {
+               display: grid;
+               place-content: center;
+               height: 100%;
+               padding: 30px;
+               color: #f3efe5;
+               text-align: center;
+               gap: 15px
+          }
+
+          .wait-media h2 {
+               font-family: var(--serif);
+               font-size: 40px;
+               font-weight: 400
+          }
+
+          .wait-media p {
+               font-size: 14px;
+               line-height: 1.7;
+               max-width: 430px
+          }
+
+          .stage.overlay-off .question,
+          .stage.overlay-off .empty-overlay {
+               display: none
+          }
+
+          .stage.controls-off .stage-tools,
+          .stage.controls-off .q-header,
+          .stage.controls-off .q-footer,
+          .stage.controls-off .history-tray,
+          .stage.controls-off .stage-corner {
+               display: none
+          }
+
+          .stage.controls-off .question {
+               resize: none
+          }
+
+          .stage.controls-off .q-text {
+               padding: 20px
+          }
+
+          .controls-off .stage-tools:hover {
+               display: flex
+          }
+
+          .stage-clean-exit {
+               display: none;
+               position: absolute;
+               top: 12px;
+               right: 12px;
+               z-index: 6;
+               font-size: 12px;
+               background: #fcfaf3;
+               opacity: .3
+          }
+
+          .controls-off .stage-clean-exit {
+               display: flex
+          }
+
+          .stage-clean-exit:hover {
+               opacity: 1
+          }
+
+          @media(min-width:1600px) {
+               .display-grid {
+                    grid-template-columns: minmax(0, 1fr) 350px
+               }
+
+               .stage {
+                    aspect-ratio: 16/9
+               }
+
+               .queue {
+                    max-height: 460px
+               }
+          }
+
+          @media(max-width:1100px) {
+               .topbar {
+                    padding: 15px 20px
+               }
+
+               .workspace {
+                    padding: 22px 20px
+               }
+
+               .display-grid {
+                    grid-template-columns: minmax(0, 1fr) 260px;
+                    gap: 17px
+               }
+
+               .connection {
+                    display: none
+               }
+
+               .question {
+                    --q-size: 28px
+               }
+
+               .student-layout {
+                    gap: 35px;
+                    grid-template-columns: 260px 1fr
+               }
+
+               .sourcebar button {
+                    padding: 7px 9px
+               }
+
+               .sourcebar button span.optional {
+                    display: none
+               }
+          }
+
+          @media(max-width:800px) {
+               .display-grid {
+                    grid-template-columns: 1fr
+               }
+
+               .sidepanel {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 16px
+               }
+
+               .panel-top {
+                    grid-column: 1/-1;
+                    padding-bottom: 0
+               }
+
+               .queue {
+                    max-height: 300px
+               }
+
+               .settings {
+                    margin-top: 0;
+                    padding-top: 0;
+                    border-top: 0
+               }
+
+               .stage {
+                    aspect-ratio: 4/3
+               }
+
+               .pagehead h1 {
+                    font-size: 32px
+               }
+
+               .pagehead>.row button {
+                    padding: 8px 10px;
+                    font-size: 12px
+               }
+
+               .student-layout {
+                    display: block;
+                    max-width: 680px;
+                    padding: 25px 20px
+               }
+
+               .student-intro {
+                    display: none
+               }
+
+               .mobile-session {
+                    display: block;
+                    border-bottom: 1px solid var(--line);
+                    padding-bottom: 18px;
+                    margin-bottom: 22px
+               }
+
+               .mobile-session h1 {
+                    font-family: var(--serif);
+                    font-size: 32px;
+                    font-weight: 400;
+                    margin: 8px 0
+               }
+
+               .feed {
+                    max-height: 44dvh
+               }
+
+               .topbar {
+                    min-height: 70px;
+                    gap: 12px;
+                    padding: 12px 20px
+               }
+
+               .brandname {
+                    font-size: 23px
+               }
+
+               .tabs a {
+                    font-size: 12px;
+                    padding: 9px
+               }
+
+               .brandname small {
+                    font-size: 8px
+               }
+
+               .tabs svg {
+                    display: none
+               }
+
+               .workspace {
+                    padding: 22px 16px
+               }
+
+               .topbar .help-button {
+                    display: none
+               }
+
+               .stage:fullscreen .question {
+                    --q-size: 36px
+               }
+
+               .understage .shortcuts {
+                    display: none
+               }
+          }
+
+          @media(max-width:480px) {
+               .topbar {
+                    padding: 12px 16px
+               }
+
+               .brandmark {
+                    width: 30px;
+                    height: 30px;
+                    font-size: 22px
+               }
+
+               .brand {
+                    gap: 8px
+               }
+
+               .brandname small {
+                    display: none
+               }
+
+               .tabs {
+                    gap: 0;
+                    margin-left: auto
+               }
+
+               .tabs a {
+                    padding: 9px 10px
+               }
+
+               .pagehead {
+                    align-items: start
+               }
+
+               .pagehead h1 {
+                    font-size: 28px
+               }
+
+               .pagehead p {
+                    font-size: 12px
+               }
+
+               .pagehead>.row {
+                    flex-direction: column;
+                    gap: 5px
+               }
+
+               .sourcebar {
+                    flex-wrap: wrap
+               }
+
+               .sourcebar button {
+                    font-size: 11px;
+                    padding: 6px 8px
+               }
+
+               .question {
+                    --q-size: 24px
+               }
+
+               .q-header {
+                    padding: 10px 10px 5px
+               }
+
+               .q-text {
+                    padding: 5px 10px 10px
+               }
+
+               .q-footer {
+                    padding: 0 10px 10px
+               }
+
+               .sidepanel {
+                    display: block
+               }
+
+               .queue {
+                    max-height: 250px
+               }
+
+               .settings {
+                    margin-top: 20px;
+                    border-top: 1px solid var(--line);
+                    padding-top: 20px
+               }
+
+               .composer-bottom .small {
+                    max-width: 55%
+               }
+
+               .message {
+                    padding: 17px
+               }
+
+               .student-layout {
+                    padding: 22px 16px
+               }
+
+               .stage-tools button {
+                    font-size: 10px;
+                    padding: 5px 7px;
+                    min-height: 32px
+               }
+
+               .stage-corner {
+                    font-size: 8px;
+                    left: 10px;
+                    top: 13px
+               }
+
+               .q-meta {
+                    font-size: 9px
+               }
+
+               .slide-title {
+                    width: 75%
+               }
+
+               .slide p {
+                    max-width: 60%
+               }
+
+               .slide-art {
+                    opacity: .7;
+                    right: 1%;
+                    width: 26%
+               }
+
+               .empty-overlay p {
+                    font-size: 11px
+               }
+          }
+
+          @media(prefers-reduced-motion:no-preference) {
+               .question {
+                    animation: arrive .22s ease-out
+               }
+
+               @keyframes arrive {
+                    from {
+                         opacity: 0;
+                         transform: translateY(8px)
+                    }
+
+                    to {
+                         opacity: 1;
+                         transform: translateY(0)
+                    }
+               }
+          }
+     </style>
+</head>
+
+<body>
+     <header class="topbar"><a class="brand" href="?view=display"><span class="brandmark">r</span><span
+                    class="brandname">ruang<small>GROUP 02 / PDT06</small></span></a>
+          <nav class="tabs" aria-label="Interface"><a id="nav-display" href="?view=display">Projector</a><a
+                    id="nav-student" href="?view=student">Ask a question</a></nav><span class="connection"
+               id="connection"><span class="dot"></span>Connecting…</span><button class="ghost help-button" id="help"
+               aria-label="Connection help">?</button>
+     </header>
+     <div class="offline-banner" id="offline-banner" hidden></div>
+     <main id="display-view" class="workspace">
+          <div class="pagehead">
+               <div>
+                    <div class="eyebrow">LIVE CLASSROOM / PROJECTOR VIEW</div>
+                    <h1 id="session-heading">Pengantar Desain Teknik</h1>
+                    <p>Your content fills the screen. Questions stay in the room.</p>
+               </div>
+               <div class="row"><button id="open-student">Open phone UI ↗</button><button class="ghost"
+                         id="join">Connect devices</button></div>
+          </div>
+          <div class="display-grid">
+               <section aria-label="Presentation">
+                    <div class="sourcebar" role="group" aria-label="Presentation source"><button class="active"
+                              data-source="slide">01 <span>Slide</span></button><button data-source="youtube">02
+                              <span>YouTube</span></button><button data-source="camera">03
+                              <span>Camera</span></button><button data-source="file">04 <span>Local
+                                   file</span></button><button class="expand" id="fullscreen">⛶ <span
+                                   class="optional">Fullscreen</span></button></div>
+                    <div id="source-youtube" class="source-panel" hidden><label for="youtube-url">YouTube URL or video
+                              ID</label>
+                         <div class="row"><input id="youtube-url"
+                                   placeholder="https://www.youtube.com/watch?v=…"><button id="load-youtube"
+                                   class="primary">Load video</button></div>
+                         <p>Needs internet. Use Ruang’s Fullscreen button above to keep questions visible. Some videos
+                              do not allow embedding.</p>
+                    </div>
+                    <div id="source-camera" class="source-panel" hidden>
+                         <div class="row wrap"><button id="start-camera" class="primary">Start camera</button><button
+                                   id="stop-camera">Stop</button><select id="camera-choice" aria-label="Camera">
+                                   <option value="">Default camera</option>
+                              </select><label class="row" style="margin:0"><input id="mirror"
+                                        type="checkbox">Mirror</label></div>
+                         <p id="camera-info">Choose a webcam or video capture device. Camera permission requires
+                              localhost or HTTPS.</p>
+                    </div>
+                    <div id="source-file" class="source-panel" hidden><label for="local-file">Local video or image ·
+                              stays on this computer</label><input type="file" id="local-file" accept="video/*,image/*">
+                         <p>Offline video playback also keeps the question layer visible in Ruang fullscreen.</p>
+                    </div>
+                    <div class="stage" id="stage">
+                         <div class="media-layer" id="media"></div>
+                         <div class="stage-corner">PDT06 / LIVE QUESTIONS</div>
+                         <div class="stage-tools"><button id="stage-hide">Hide questions</button><button
+                                   id="clean-view">Clean view</button><button id="exit-fullscreen" hidden>Exit
+                                   fullscreen</button></div><button class="stage-clean-exit" id="restore-controls">Show
+                              controls</button>
+                         <div class="empty-overlay" id="empty-overlay"><svg viewBox="0 0 24 24">
+                                   <path d="M4 4h16v12H9l-5 4Z" />
+                                   <path d="M8 8h8M8 12h5" />
+                              </svg>
+                              <div><strong>The floor is open.</strong>
+                                   <p>Questions sent from the phone UI will appear here.</p>
+                              </div>
+                         </div>
+                         <article class="question" id="question" aria-label="Current question" hidden>
+                              <div class="q-header" id="q-handle" title="Drag to move question"><svg class="drag-dots"
+                                        viewBox="0 0 12 20">
+                                        <path d="M3 5h.1M9 5h.1M3 10h.1M9 10h.1M3 15h.1M9 15h.1" stroke-width="3" />
+                                   </svg><span class="eyebrow">ANONYMOUS QUESTION</span><span class="q-meta"
+                                        id="q-meta"></span></div>
+                              <div class="q-text" id="q-text"></div>
+                              <div class="q-footer"><span id="q-position"></span>
+                                   <div class="row"><button id="next-question">Next →</button><button class="resolve"
+                                             id="resolve-question">Mark resolved ✓</button></div>
+                              </div>
+                         </article>
+                         <div class="history-tray" id="history-tray"><button class="history-handle" id="history-handle"
+                                   aria-expanded="false" aria-controls="tray-list"><span class="handlebar"></span><span
+                                        id="history-label">PREVIOUS QUESTIONS · 0</span><span id="tray-arrow">↑ Pull
+                                        up</span></button>
+                              <div class="tray-list" id="tray-list"></div>
+                         </div>
+                    </div>
+                    <div class="understage"><span><span class="dot"></span><span id="source-label">Offline slide</span>
+                              <span class="muted">/ question overlay on</span></span><span
+                              class="shortcuts"><kbd>F</kbd> Fullscreen &nbsp; <kbd>N</kbd> Next &nbsp; <kbd>H</kbd>
+                              Hide &nbsp; <kbd>Esc</kbd> Exit</span></div>
+               </section>
+               <aside class="sidepanel">
+                    <div class="panel-top">
+                         <h2>Question queue</h2><span class="count" id="queue-count">00</span>
+                    </div>
+                    <div class="queue" id="queue"></div>
+                    <details class="settings" open>
+                         <summary>Make it readable</summary>
+                         <div class="controlrow"><label for="text-size">Question text</label><output id="size-output">36
+                                   px</output></div><input id="text-size" type="range" min="22" max="96" value="36"
+                              aria-label="Question text size">
+                         <div class="controlrow"><label for="box-width">Bubble width</label><output
+                                   id="width-output">92%</output></div><input id="box-width" type="range" min="32"
+                              max="96" value="92" aria-label="Bubble width">
+                         <div class="setting-group"><label>Contrast</label>
+                              <div class="segmented"><button class="theme-light" id="light-theme"
+                                        aria-pressed="true">Paper / ink</button><button class="theme-dark"
+                                        id="dark-theme" aria-pressed="false">Ink / paper</button></div>
+                         </div>
+                         <div class="subcontrols"><button id="reset-position">Reset position</button><button
+                                   id="sample">Try sample questions</button><button id="export">Export
+                                   comments</button><button id="clear" class="danger">Clear session</button></div>
+                         <p class="small muted" style="margin-top:15px">Drag the dots to move the bubble. Drag its
+                              bottom-right corner to resize it. Pull the bottom strip up for resolved questions.</p>
+                    </details>
+               </aside>
+          </div>
+          <footer class="session-foot"><span>RUANG — ANONYMOUS CLASSROOM DISCUSSION</span><span
+                    id="storage-status">No active session</span></footer>
+     </main>
+     <main id="student-view" hidden>
+          <div class="student-layout">
+               <aside class="student-intro">
+                    <div class="eyebrow">PENGANTAR DESAIN TEKNIK</div>
+                    <h1>Good questions<br>deserve<br><em>some space.</em></h1>
+                    <p>Ask while the lecture continues. Your question goes straight to the projector, without your name.
+                    </p>
+                    <div class="session-code"><span>CLASSROOM</span><strong>PDT06 / 02</strong></div>
+                    <p class="small">Keep this page open to follow the discussion and see which questions have been
+                         answered.</p><button class="ghost" id="student-help">How to connect</button>
+               </aside>
+               <section>
+                    <div class="mobile-session">
+                         <div class="eyebrow">CLASSROOM PDT06 / GROUP 02</div>
+                         <h1>Pengantar Desain Teknik</h1>
+                         <p class="small muted">Ask freely. Your name is never requested.</p>
+                    </div>
+                    <div class="discussion-head">
+                         <h2>The discussion</h2><span class="small muted" id="feed-count">0 questions</span>
+                    </div>
+                    <p class="small muted" id="student-room-state" role="status">Connecting to the classroom…</p>
+                    <div class="feed" id="feed" aria-label="All classroom questions"></div>
+                    <form class="composer" id="comment-form"><label for="comment-input">Your question or
+                              comment</label><textarea id="comment-input" rows="4"
+                              placeholder="What would you like to ask?" required></textarea>
+                         <div class="composer-bottom"><span class="small muted" id="form-note">No app character limit. Netlify request size limits apply.</span><button type="submit" class="primary" id="send">Send
+                                   question ↗</button></div>
+                         <div class="privacy-note"><svg viewBox="0 0 24 24">
+                                   <path d="M6 10h12v10H6zM8 10V7a4 4 0 0 1 8 0v3" />
+                              </svg><span>Anonymous to classmates. Please keep questions respectful.</span></div>
+                    </form>
+               </section>
+          </div>
+     </main>
+     <dialog class="dialog" id="connect-dialog"><button class="close-dialog" id="close-dialog"
+               aria-label="Close">×</button>
+          <div class="eyebrow">ONE ROOM. TWO INTERFACES.</div>
+          <h2>Bring the phones in.</h2>
+          <p id="connection-explanation">Create a room to share questions with phones through this Netlify site.</p>
+          <p id="connection-status" class="session-state" role="status">Connecting…</p>
+          <div class="session-tools">
+               <button id="create-session" class="primary">Create classroom session</button>
+               <div id="session-info" hidden>
+                    <div class="qr-wrap"><div id="qr-code" aria-label="Student join QR code"></div><p class="small muted">Scan to open the anonymous phone view and join this room.</p></div>
+                    <label for="join-url">Student link</label><div class="row"><input id="join-url" readonly><button id="copy-link" aria-label="Copy student link">Copy</button><button id="launch-phone">Open phone UI ↗</button></div>
+                    <p class="small muted" id="room-state"></p>
+                    <div class="row"><button id="close-session" class="danger">Close session</button><button id="reopen-session">Reopen session</button></div>
+               </div>
+          </div>
+          <p class="small muted" style="margin-top:16px">Shared questions and YouTube require internet. Camera and local media stay on the projector device. No student identity is collected.</p>
+          <p class="small muted">Presenter control is saved in this browser for this room. Clearing this browser’s site data removes that recovery token; keep control on the original browser or create a new room.</p>
+     </dialog>
+     <div class="notice" role="status" id="toast" hidden></div>
+     <script src="/vendor/qrcode.js"></script>
+     <script>
+          'use strict';
+          // ---------- Session storage & transport ----------
+          const $ = id => document.getElementById(id);
+          const params = new URLSearchParams(location.search), view = params.get('view') === 'student' ? 'student' : 'display';
+          const SETTINGS = 'ruang-pdt06-display-v1';
+          let questions = [], currentId = null, stream = null, cameraToken = 0, source = 'slide', localURL = null, historyOpen = false;
+          const API_URL = new URL('/.netlify/functions/api', location.origin);
+          let roomId = params.get('room') || '', ownerToken = '', roomOwner = false, roomOpen = false, roomKnown = false;
+          let roomEpoch = -1, connectionState = 'connecting', hasConnected = false, failures = 0, roomError = '';
+          let pollTimer = null, pollInFlight = false, pollAgain = false;
+          let preferences = { size: 36, width: 92, dark: false };
+          function readStore(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback } catch { return fallback } }
+          preferences = { ...preferences, ...readStore(SETTINGS, {}) };
+          function toast(message) { $('toast').textContent = message; $('toast').hidden = false; clearTimeout(toast.timer); toast.timer = setTimeout(() => $('toast').hidden = true, 4500) }
+          function uid() { if (!globalThis.crypto?.getRandomValues) throw Error('Secure random IDs need a modern browser on HTTPS.'); const bytes = crypto.getRandomValues(new Uint8Array(16)); return [...bytes].map(value => value.toString(16).padStart(2, '0')).join('') }
+          function savePreferences() { try { localStorage.setItem(SETTINGS, JSON.stringify(preferences)) } catch { } }
+          function draftKey() { return 'ruang-draft-v1-' + (roomId || 'no-room') }
+          function ownerKey(id) { return 'ruang-owner-token-v1-' + id }
+          function loadOwnerToken(id) { try { return id ? localStorage.getItem(ownerKey(id)) || '' : '' } catch { return '' } }
+          ownerToken = loadOwnerToken(roomId);
+          function setConnectionState(state, message) {
+               connectionState = state;
+               $('connection').dataset.state = state; $('connection').replaceChildren(node('span', 'dot'), document.createTextNode(message));
+               $('connection-status').textContent = message; $('offline-banner').hidden = state === 'connected';
+               if (!$('offline-banner').hidden) $('offline-banner').textContent = message;
+               $('create-session').disabled = state !== 'connected' || !!roomId || view === 'student';
+          }
+          function pageURL(targetView, targetRoom = roomId) {
+               const url = new URL(location.href); url.searchParams.set('view', targetView);
+               if (targetRoom) url.searchParams.set('room', targetRoom); else url.searchParams.delete('room');
+               url.hash = ''; return url.href;
+          }
+          function setRoomAddress(id) {
+               roomId = id; const url = new URL(location.href); url.searchParams.set('view', view);
+               if (id) url.searchParams.set('room', id); else url.searchParams.delete('room');
+               try { history.replaceState(null, '', url); } catch { }
+               $('session-info').hidden = !id;
+               if (id) { $('join-url').value = pageURL('student', id); renderQR($('join-url').value); }
+               $('copy-link').disabled = !id; $('launch-phone').disabled = !id;
+               roomKnown = false; roomOwner = false; roomOpen = false; roomEpoch = -1; roomError = '';
+               updateRoomUI(); schedulePoll(0);
+          }
+          function renderQR(value) {
+               const area = $('qr-code'); area.replaceChildren();
+               if (typeof qrcode !== 'function') { area.textContent = 'QR encoder unavailable. Rebuild the site and reload.'; return; }
+               try {
+                    const code = qrcode(0, 'M'); code.addData(value, 'Byte'); code.make();
+                    const image = document.createElement('img'); image.src = code.createDataURL(3, 4); image.alt = 'Scan to join this classroom session';
+                    area.replaceChildren(image);
+               } catch (error) { area.textContent = 'QR could not be generated: ' + error.message; }
+          }
+          function updateRoomUI() {
+               const isOwner = roomKnown && roomOwner;
+               $('session-info').hidden = !roomId;
+               $('create-session').hidden = view === 'student' || !!roomId;
+               $('close-session').hidden = !isOwner || !roomOpen; $('reopen-session').hidden = !isOwner || roomOpen;
+               $('clear').disabled = !isOwner; $('clear').title = isOwner ? '' : 'Only the session owner can clear questions.';
+               $('room-state').textContent = !roomId ? 'Create a classroom session to generate a QR code and student link.' : roomError || (!roomKnown ? 'Looking for this room…' : roomOpen ? (isOwner ? 'You own this open session.' : 'Session open · you can submit questions.') : (isOwner ? 'Session closed · reopen it to accept questions.' : 'This session is closed.'));
+               $('room-state').setAttribute('role', 'status');
+               $('student-room-state').textContent = !roomId ? 'This link is missing a classroom. Scan the presenter’s QR code or ask for the student link.' : roomError || (!roomKnown ? (connectionState === 'failed' ? 'The classroom could not be reached. Check the link or reconnect.' : 'Connecting to the classroom…') : connectionState !== 'connected' ? (connectionState === 'failed' ? 'Connection failed · retrying. Your draft is safe.' : 'Reconnecting to the classroom…') : roomOpen ? 'Connected to the live classroom.' : 'This classroom session is closed.');
+               $('storage-status').textContent = !roomId ? 'No active session' : !roomKnown ? 'Connecting to session' : isOwner ? 'Session owned by this browser' : 'Live session · Netlify Blobs';
+               $('send').disabled = !roomKnown || (!roomOpen && !$('comment-input').dataset.draftId);
+          }
+          function schedulePoll(delay = 2000) {
+               clearTimeout(pollTimer);
+               if (document.hidden) return;
+               pollTimer = setTimeout(poll, delay);
+          }
+          function applyRoomState(room) {
+               if (room.epoch < roomEpoch) return false;
+               if (roomEpoch >= 0 && room.epoch > roomEpoch) questions = [];
+               roomEpoch = room.epoch; roomOpen = room.open; return true;
+          }
+          async function apiRequest(action, data = {}) {
+               const headers = { 'content-type': 'application/json' };
+               if (ownerToken) headers.authorization = 'Bearer ' + ownerToken;
+               let response;
+               try {
+                    response = await fetch(API_URL, {
+                         method: 'POST', headers, credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(15000),
+                         body: JSON.stringify({ action, room: roomId || undefined, ...data })
+                    });
+               } catch (error) {
+                    failures += 1;
+                    const state = hasConnected ? 'reconnecting' : failures >= 2 ? 'failed' : 'connecting';
+                    setConnectionState(state, state === 'connecting' ? 'Connecting…' : state === 'failed' ? 'Connection failed · retrying' : 'Reconnecting…');
+                    updateRoomUI(); schedulePoll(Math.min(30000, 2000 * 2 ** Math.min(failures - 1, 4)));
+                    throw error;
+               }
+               let payload = null;
+               try { payload = await response.json(); } catch {
+                    if (response.status === 413) throw Error('This request exceeds Netlify’s 6 MB function payload limit. Shorten it or split it into smaller questions; your draft is still here.');
+                    if (response.ok) throw Error('The classroom service returned an unreadable response. Your draft is still here.');
+               }
+               if (!response.ok) {
+                    if (response.status === 413) throw Error(payload?.error || 'This request exceeds Netlify’s 6 MB function payload limit. Your draft is still here.');
+                    throw Error(payload?.error || 'The classroom service returned an error (' + response.status + ').');
+               }
+               if (!payload) throw Error('The classroom service returned an unreadable response. Your draft is still here.');
+               return payload;
+          }
+          async function poll() {
+               if (document.hidden) return;
+               if (pollInFlight) { pollAgain = true; return; }
+               pollInFlight = true;
+               pollAgain = false;
+               let nextDelay = 2000;
+               try {
+                    if (roomId && !/^[a-f0-9]{36}$/.test(roomId)) {
+                         roomKnown = false; roomError = 'This classroom link is invalid. Ask the presenter for a new link.';
+                         failures = 5; nextDelay = 30000; setConnectionState('failed', roomError); updateRoomUI(); render(); return;
+                    }
+                    const url = new URL(API_URL);
+                    if (roomId) url.searchParams.set('room', roomId);
+                    const headers = ownerToken ? { authorization: 'Bearer ' + ownerToken } : {};
+                    const response = await fetch(url, {
+                         headers, credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(10000)
+                    });
+                    const payload = await response.json().catch(() => null);
+                    if (!response.ok) {
+                         const error = Error(payload?.error || 'The classroom service returned an error (' + response.status + ').');
+                         error.status = response.status; throw error;
+                    }
+                    if (!payload) throw Error('The classroom service returned an unreadable response.');
+                    failures = 0; hasConnected = true; roomError = '';
+                    if (roomId) {
+                         if (applyRoomState(payload.room)) {
+                              roomKnown = true; roomOwner = payload.owner === true;
+                              questions = payload.questions.map(q => ({ id: q.id, text: q.text, created: q.createdAt, resolved: q.resolved === true }));
+                         }
+                    } else { roomKnown = false; roomOwner = false; roomOpen = false; questions = []; }
+                    setConnectionState('connected', roomId ? 'Connected · live classroom' : 'Connected · ready to create a classroom');
+                    updateRoomUI(); render();
+               } catch (error) {
+                    failures += 1;
+                    if (error.status === 404 || error.status === 400) {
+                         roomKnown = false; roomOwner = false; roomError = error.message; questions = [];
+                    }
+                    const state = failures >= 5 ? 'failed' : hasConnected ? 'reconnecting' : failures >= 2 ? 'failed' : 'connecting';
+                    const message = state === 'failed' ? 'Connection failed · retrying' : state === 'reconnecting' ? 'Reconnecting…' : 'Connecting…';
+                    setConnectionState(state, roomError || message); updateRoomUI(); render();
+                    nextDelay = Math.min(30000, 2000 * 2 ** Math.min(failures - 1, 4));
+               } finally {
+                    pollInFlight = false;
+                    if (!document.hidden) schedulePoll(pollAgain ? 0 : nextDelay);
+               }
+          }
+          window.addEventListener('focus', () => schedulePoll(0));
+          window.addEventListener('online', () => schedulePoll(0));
+          document.addEventListener('visibilitychange', () => {
+               if (document.hidden) clearTimeout(pollTimer); else schedulePoll(0);
+          });
+          async function createSession() {
+               if (connectionState !== 'connected') { toast('Wait until the site is connected, then try again.'); return; }
+               $('create-session').disabled = true;
+               try {
+                    const result = await apiRequest('create');
+                    roomId = result.room.id; ownerToken = result.ownerToken;
+                    let saved = true;
+                    try { localStorage.setItem(ownerKey(roomId), ownerToken); } catch { saved = false; }
+                    setRoomAddress(roomId); applyRoomState(result.room); roomKnown = true; roomOwner = true; roomOpen = true;
+                    $('connection-explanation').textContent = 'Room created. Share the QR code or student link; questions appear here on the projector.';
+                    updateRoomUI(); schedulePoll(0);
+                    if (!saved) toast('Room created, but this browser could not save presenter recovery. Keep this page open.');
+               } catch (error) { toast('Could not create classroom: ' + error.message); }
+               finally { $('create-session').disabled = connectionState !== 'connected' || !!roomId; }
+          }
+          async function mutate(action, data = {}) {
+               if (!roomId) throw Error('Open the presenter’s student link or scan the room QR code first.');
+               if (action !== 'question' && !roomOwner) throw Error('Only the presenter who created this classroom can moderate it.');
+               const result = await apiRequest(action, data);
+               if (result.room && applyRoomState(result.room)) {
+                    roomKnown = true;
+                    roomOwner = action === 'clear' || action === 'open' || action === 'close' ? true : roomOwner;
+               }
+               if (action === 'clear') questions = [];
+               updateRoomUI(); render(); schedulePoll(0);
+               return result;
+          }
+          // ---------- Safe DOM rendering (comments never interpreted as HTML) ----------
+          function node(tag, cls, text) { const el = document.createElement(tag); if (cls) el.className = cls; if (text !== undefined) el.textContent = text; return el }
+          function time(q) { return new Date(q.created).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+          function button(text, fn, cls = '') { const b = node('button', cls, text); b.type = 'button'; b.onclick = fn; return b }
+          function activeQuestions() { return questions.filter(q => !q.resolved) }
+          function render() {
+               const pending = activeQuestions(); if (!pending.some(q => q.id === currentId)) currentId = pending[0]?.id || null; const current = pending.find(q => q.id === currentId);
+               $('queue-count').textContent = String(pending.length).padStart(2, '0'); $('queue').replaceChildren();
+               if (!pending.length) $('queue').append(node('div', 'queue-empty', 'No questions waiting. Create a session and open the phone UI to invite questions.'));
+               for (const [i, q] of pending.entries()) { const card = node('article', 'queue-card' + (q.id === currentId ? ' selected' : '')); const meta = node('div', 'row between'); meta.append(node('span', 'eyebrow', String(i + 1).padStart(2, '0') + ' / ANONYMOUS'), node('span', 'small muted', time(q))); card.append(meta, node('p', '', q.text)); const actions = node('div', 'row'), resolveButton = button('Resolve', () => resolve(q.id)); resolveButton.disabled = !roomOwner || !roomOpen; actions.append(button(q.id === currentId ? 'On screen' : 'Show question', () => { currentId = q.id; render() }), resolveButton); card.append(actions); $('queue').append(card) }
+               $('question').hidden = !current; $('empty-overlay').hidden = !!current;
+               if (current) { $('q-text').textContent = current.text; $('q-meta').textContent = time(current); $('q-position').textContent = (pending.findIndex(q => q.id === currentId) + 1) + ' of ' + pending.length + ' waiting'; $('next-question').disabled = pending.length < 2; $('resolve-question').disabled = !roomOwner || !roomOpen }
+               const resolved = questions.filter(q => q.resolved); $('history-label').textContent = 'PREVIOUS QUESTIONS · ' + resolved.length; $('tray-list').replaceChildren();
+               if (!resolved.length) $('tray-list').append(node('p', 'small muted', 'Resolved questions will be kept here.'));
+               for (const q of [...resolved].reverse()) { const item = node('div', 'tray-item'); const content = node('div'); content.append(node('span', 'eyebrow', 'RESOLVED · ' + time(q)), node('p', '', q.text)); const reopenButton = button('Show again', async () => { try { await mutate('reopen', { id: q.id }); currentId = q.id; render(); setTray(false) } catch (e) { toast(e.message) } }); reopenButton.disabled = !roomOwner; item.append(content, reopenButton); $('tray-list').append(item) }
+               const feed = $('feed'), nearBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 90; feed.replaceChildren(); $('feed-count').textContent = questions.length + ' question' + (questions.length === 1 ? '' : 's');
+               if (!questions.length) feed.append(node('div', 'feed-empty', 'Be the first to ask. All questions will stay here so you can follow the discussion.'));
+               for (const q of questions) { const m = node('article', 'message' + (q.resolved ? ' resolved' : '')); const meta = node('div', 'message-meta'); meta.append(node('strong', '', 'Anonymous'), node('time', 'muted', time(q)), node('span', 'status-tag', q.resolved ? 'Resolved' : 'Open question')); m.append(meta, node('p', '', q.text)); feed.append(m) } if (nearBottom) feed.scrollTop = feed.scrollHeight;
+          }
+          async function resolve(id) { try { await mutate('resolve', { id }); toast('Marked resolved. Saved in previous questions.') } catch (e) { toast(e.message) } }
+          function next() { const a = activeQuestions(), index = a.findIndex(q => q.id === currentId); if (a.length) { currentId = a[(index + 1) % a.length].id; render() } }
+          $('next-question').onclick = next; $('resolve-question').onclick = () => currentId && resolve(currentId);
+          $('comment-form').onsubmit = async e => {
+               e.preventDefault(); const field = $('comment-input'), text = field.value;
+               if (!text.trim()) { field.setCustomValidity('Please write a question first.'); field.reportValidity(); return; }
+               const b = $('send'); b.disabled = true; b.textContent = 'Sending…';
+               try {
+                    const id = field.dataset.draftId || (field.dataset.draftId = uid());
+                    try { localStorage.setItem(draftKey(), JSON.stringify({ text, id })); } catch { }
+                    const result = await mutate('question', { text, id });
+                    field.value = ''; delete field.dataset.draftId;
+                    try { localStorage.removeItem(draftKey()); } catch { }
+                    const message = result.cleared ? 'Your question was received, but the session was cleared before it appeared.' : result.cleanupPending ? 'Question sent. Cleanup of an older cleared copy is pending.' : 'Sent. Your question is now in the classroom discussion.';
+                    $('form-note').textContent = message; $('feed').scrollTop = $('feed').scrollHeight; toast(result.cleared ? 'Question received before the session was cleared.' : 'Question sent');
+               } catch (error) { $('form-note').textContent = 'Not sent. ' + error.message + ' Your draft is still here.'; toast('Could not send. Your draft is still here.'); }
+               finally { b.disabled = !roomKnown || (!roomOpen && !field.dataset.draftId); b.textContent = 'Send question ↗'; }
+          };
+          $('comment-input').oninput = () => {
+               const field = $('comment-input'), saved = readStore(draftKey(), null); field.setCustomValidity('');
+               if (saved?.text !== field.value) delete field.dataset.draftId;
+               try { if (field.value) localStorage.setItem(draftKey(), JSON.stringify({ text: field.value, ...(field.dataset.draftId ? { id: field.dataset.draftId } : {}) })); else localStorage.removeItem(draftKey()); } catch { }
+               $('form-note').textContent = 'No app character limit. Netlify request size limits apply.';
+               updateRoomUI();
+          };
+          // ---------- Source media. Only this parent stage enters fullscreen. ----------
+          function slideMarkup() { return `<div class="slide"><div class="slide-top"><span>PENGANTAR DESAIN TEKNIK</span><span>02 / PROTOTYPING</span></div><h2 class="slide-title">From a problem<br>to a <em>prototype.</em></h2><div class="slide-rule"></div><p>Observe the room.<br>Ask the right questions.<br>Test what actually matters.</p><svg class="slide-art" viewBox="0 0 200 250" aria-hidden="true"><path d="M25 155 100 113l75 42-75 44Z" fill="#bdc6a5" stroke="#526849"/><path d="m25 113 75-42 75 42-75 44Z" fill="#d1d9be" stroke="#526849"/><path d="M25 71 100 29l75 42-75 44Z" fill="#e5e7d5" stroke="#526849"/><path d="M25 71v84m75-40v84m75-128v84M100 29v84" stroke="#526849" stroke-dasharray="3 4"/><circle cx="100" cy="29" r="5" fill="#355b40"/><path d="m100 215 0 22m-6-6 6 6 6-6" stroke="#526849"/></svg><div class="slide-foot"><span>GROUP 02 / PDT06</span><span>OFFLINE DEMO SLIDE — 01</span></div></div>` }
+          function waitMedia(title, text) { const w = node('div', 'wait-media'); w.append(node('h2', '', title), node('p', '', text)); $('media').replaceChildren(w) }
+          function stopCamera() { cameraToken++; if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null } $('camera-info').textContent = 'Camera stopped. Start it again to resume.' }
+          function releaseFile() { if (localURL) { URL.revokeObjectURL(localURL); localURL = null } }
+          function switchSource(s) { if (source === 'camera' && s !== 'camera') stopCamera(); if (s !== source) releaseFile(); source = s; document.querySelectorAll('[data-source]').forEach(b => b.classList.toggle('active', b.dataset.source === s));['youtube', 'camera', 'file'].forEach(x => $('source-' + x).hidden = x !== s); $('source-label').textContent = { slide: 'Offline slide', youtube: 'YouTube video', camera: 'Camera input', file: 'Local media' }[s]; $('media').replaceChildren(); if (s === 'slide') $('media').innerHTML = slideMarkup(); if (s === 'youtube') waitMedia('Video, with room for questions.', 'Paste a YouTube link above, then load it. Use Ruang’s fullscreen to keep the overlay visible.'); if (s === 'camera') waitMedia('A live view of the room.', 'Start the camera above. Questions appear over the camera feed.'); if (s === 'file') waitMedia('Keep the lesson offline.', 'Choose a video or image from your computer. Your file stays on this device.') }
+          document.querySelectorAll('[data-source]').forEach(b => b.onclick = () => switchSource(b.dataset.source));
+          function youtubeID(raw) { if (/^[\w-]{11}$/.test(raw)) return raw; try { const u = new URL(raw); const host = u.hostname.replace(/^www\./, ''); if (host === 'youtu.be') return u.pathname.split('/')[1]; if (['youtube.com', 'm.youtube.com', 'youtube-nocookie.com'].includes(host)) { return u.searchParams.get('v') || u.pathname.match(/^\/(?:embed|shorts|live)\/([\w-]{11})/)?.[1] } } catch { } return null }
+          $('load-youtube').onclick = () => {
+               const id = youtubeID($('youtube-url').value.trim()); if (!id || !/^[\w-]{11}$/.test(id)) { toast('Enter a valid YouTube link or 11-character video ID.'); $('youtube-url').focus(); return } const frame = document.createElement('iframe'); frame.title = 'YouTube presentation video'; frame.src = 'https://www.youtube.com/embed/' + id + '?fs=0&playsinline=1&rel=0'; frame.allow = 'autoplay; encrypted-media; picture-in-picture'; frame.referrerPolicy = 'strict-origin-when-cross-origin';// No allowfullscreen: fullscreen belongs to the stage, not the iframe.
+               $('media').replaceChildren(frame); toast('Video loaded. Use Ruang Fullscreen above. If playback is blocked, try another video.');
+          };
+          $('start-camera').onclick = async () => { if (!navigator.mediaDevices?.getUserMedia) { toast('Camera access needs HTTPS (or localhost) and a supported browser.'); return } stopCamera(); const token = cameraToken; try { const id = $('camera-choice').value; const acquired = await navigator.mediaDevices.getUserMedia({ video: id ? { deviceId: { exact: id } } : { facingMode: 'environment' }, audio: false }); if (source !== 'camera' || token !== cameraToken) { acquired.getTracks().forEach(t => t.stop()); return } stream = acquired; const v = node('video'); v.autoplay = true; v.muted = true; v.playsInline = true; v.classList.toggle('mirror', $('mirror').checked); v.srcObject = stream; $('media').replaceChildren(v); await v.play(); const devices = await navigator.mediaDevices.enumerateDevices(); $('camera-choice').replaceChildren(); devices.filter(d => d.kind === 'videoinput').forEach((d, i) => { const o = node('option', '', d.label || 'Camera ' + (i + 1)); o.value = d.deviceId; $('camera-choice').append(o) }); $('camera-choice').value = stream.getVideoTracks()[0].getSettings().deviceId || ''; $('camera-info').textContent = 'Camera active · local projector only · microphone off.' } catch (e) { if (token === cameraToken) { stopCamera(); waitMedia('Camera unavailable.', 'Check browser permission and your camera connection, then try again.'); $('camera-info').textContent = 'Could not open camera: ' + e.message; toast('Camera unavailable. Check permission and try again.') } } };
+          $('stop-camera').onclick = () => { stopCamera(); waitMedia('Camera paused.', 'Your question overlay stays visible. Start the camera above to resume.') }; $('camera-choice').onchange = () => $('start-camera').click(); $('mirror').onchange = () => { const v = $('media').querySelector('video'); if (v) v.classList.toggle('mirror', $('mirror').checked) };
+          $('local-file').onchange = () => { const f = $('local-file').files[0]; if (!f) return; if (!f.type.startsWith('video/') && !f.type.startsWith('image/')) { toast('Choose a video or image file.'); return } releaseFile(); localURL = URL.createObjectURL(f); const media = node(f.type.startsWith('video/') ? 'video' : 'img'); media.src = localURL; if (media.tagName === 'VIDEO') { media.controls = true; media.playsInline = true; media.setAttribute('controlslist', 'nofullscreen noremoteplayback'); media.disablePictureInPicture = true; media.onloadedmetadata = () => toast('Video ready. Use Ruang Fullscreen to keep questions on top.') } else media.alt = f.name; media.onerror = () => toast('This browser cannot read that file. Try an MP4 (H.264) video or a PNG/JPEG image.'); $('media').replaceChildren(media) };
+          async function fullscreen() { const stage = $('stage'); try { if (document.fullscreenElement) { await document.exitFullscreen() } else if (stage.classList.contains('pseudo-full')) stage.classList.remove('pseudo-full'); else if (stage.requestFullscreen) await stage.requestFullscreen(); else { stage.classList.add('pseudo-full'); toast('Using a full-window view.') } } catch { stage.classList.toggle('pseudo-full'); toast('Using a full-window view.') } syncFullscreen() }
+          function syncFullscreen() { const on = !!document.fullscreenElement || $('stage').classList.contains('pseudo-full'); $('exit-fullscreen').hidden = !on; $('fullscreen').textContent = on ? '⛶ Exit fullscreen' : '⛶ Fullscreen' }
+          $('fullscreen').onclick = fullscreen; $('exit-fullscreen').onclick = fullscreen; document.addEventListener('fullscreenchange', syncFullscreen);
+          function toggleQuestions() { $('stage').classList.toggle('overlay-off'); $('stage-hide').textContent = $('stage').classList.contains('overlay-off') ? 'Show questions' : 'Hide questions' } $('stage-hide').onclick = toggleQuestions;
+          $('clean-view').onclick = () => $('stage').classList.add('controls-off'); $('restore-controls').onclick = () => $('stage').classList.remove('controls-off');
+          document.addEventListener('keydown', e => { if (view !== 'display' || e.ctrlKey || e.metaKey || e.altKey || /INPUT|TEXTAREA|SELECT|BUTTON/.test(e.target.tagName) || $('connect-dialog').open) return; if (e.key.toLowerCase() === 'f') { e.preventDefault(); fullscreen() } if (e.key.toLowerCase() === 'n') next(); if (e.key.toLowerCase() === 'h') toggleQuestions(); if (e.key === 'Escape') { $('stage').classList.remove('pseudo-full', 'controls-off'); syncFullscreen() } });
+          // ---------- Question typography, dimensions, drag & history drawer ----------
+          function applyPreferences() { const q = $('question'); q.style.setProperty('--q-size', preferences.size + 'px'); q.style.setProperty('--q-bg', preferences.dark ? '#26352d' : '#fcfaf3'); q.style.setProperty('--q-ink', preferences.dark ? '#fcfaf3' : '#242d28'); $('text-size').value = preferences.size; $('size-output').textContent = preferences.size + ' px'; $('box-width').value = preferences.width; $('width-output').textContent = preferences.width + '%'; q.style.width = preferences.width + '%'; $('light-theme').setAttribute('aria-pressed', !preferences.dark); $('dark-theme').setAttribute('aria-pressed', preferences.dark) }
+          $('text-size').oninput = () => { preferences.size = +$('text-size').value; applyPreferences(); savePreferences() }; $('box-width').oninput = () => { preferences.width = +$('box-width').value; $('question').style.left = '2%'; applyPreferences(); savePreferences() };
+          $('light-theme').onclick = () => { preferences.dark = false; applyPreferences(); savePreferences() }; $('dark-theme').onclick = () => { preferences.dark = true; applyPreferences(); savePreferences() };
+          function resetPosition() { const q = $('question'); q.style.left = '4%'; q.style.top = 'auto'; q.style.bottom = '7%'; q.style.height = 'auto'; preferences.width = 92; applyPreferences(); savePreferences() }
+          $('reset-position').onclick = resetPosition;
+          function dragHandle(handle, start, move, end) { let data = null; handle.addEventListener('pointerdown', e => { if (e.button !== 0) return; data = start(e); handle.setPointerCapture(e.pointerId); e.preventDefault() }); handle.addEventListener('pointermove', e => { if (data) move(e, data) }); const finish = e => { if (data) { end?.(e, data); data = null } }; handle.addEventListener('pointerup', finish); handle.addEventListener('pointercancel', finish) }
+          dragHandle($('q-handle'), e => { const b = $('question').getBoundingClientRect(), s = $('stage').getBoundingClientRect(); return { x: e.clientX, y: e.clientY, left: b.left - s.left, top: b.top - s.top } }, (e, d) => { const q = $('question'), s = $('stage'); q.style.left = Math.max(0, Math.min(s.clientWidth - q.offsetWidth, d.left + e.clientX - d.x)) + 'px'; q.style.top = Math.max(0, Math.min(s.clientHeight - q.offsetHeight - 34, d.top + e.clientY - d.y)) + 'px'; q.style.bottom = 'auto' });
+          function setTray(open, height) { historyOpen = open; const s = $('stage'); $('history-tray').style.height = open ? Math.min(height || s.clientHeight * .48, s.clientHeight * .75) + 'px' : '34px'; $('history-handle').setAttribute('aria-expanded', open); $('tray-arrow').textContent = open ? '↓ Pull down' : '↑ Pull up' }
+          dragHandle($('history-handle'), e => ({ y: e.clientY, h: $('history-tray').offsetHeight, moved: false }), (e, d) => { const delta = d.y - e.clientY; if (Math.abs(delta) > 5) d.moved = true; if (d.moved) setTray(true, Math.max(34, d.h + delta)) }, (e, d) => { if (!d.moved) setTray(!historyOpen); else if ($('history-tray').offsetHeight < 65) setTray(false) });
+          $('history-handle').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTray(!historyOpen) } });
+          new ResizeObserver(() => { const q = $('question'), stage = $('stage'); if (q.style.top && q.style.top !== 'auto') { q.style.top = Math.max(0, Math.min(parseFloat(q.style.top), stage.clientHeight - q.offsetHeight - 34)) + 'px'; q.style.left = Math.max(0, Math.min(parseFloat(q.style.left), stage.clientWidth - q.offsetWidth)) + 'px' } }).observe($('stage'));
+          // ---------- Utilities / demo / export ----------
+          $('sample').onclick = async () => { try { for (const text of ['How do we decide which problem is worth solving first?', 'Could you explain the difference between a prototype and a finished product?', 'Can we test this idea with only five people?']) await mutate('question', { text, id: uid() }); toast('Three sample questions added. Clear the session before your real test.') } catch (e) { toast(e.message) } };
+          $('clear').onclick = async () => { if (!confirm('Clear all questions, including resolved ones? Export first if you need a record.')) return; try { const result = await mutate('clear'); toast(result.cleanupPending ? 'Session cleared. Some older records could not yet be removed, but they will not reappear.' : 'Session cleared.') } catch (e) { toast(e.message) } };
+          $('export').onclick = () => { const blob = new Blob([JSON.stringify({ project: 'Ruang / Group 02 PDT06', exportedAt: new Date().toISOString(), questions }, null, 2)], { type: 'application/json' }), u = URL.createObjectURL(blob), a = node('a'); a.href = u; a.download = 'ruang-comments.json'; a.click(); setTimeout(() => URL.revokeObjectURL(u), 1000) };
+          function phoneURL() { return pageURL('student') }
+          function openStudent() { if (!roomId) { showConnect(); return; } window.open(phoneURL(), 'ruang-student') }
+          $('open-student').onclick = openStudent; $('launch-phone').onclick = () => window.open($('join-url').value, 'ruang-student');
+          function showConnect() {
+               $('connection-explanation').textContent = roomId ? 'Share this room’s QR code or student link. Phones join this room automatically.' : 'Create a room to generate a QR code and student link. Questions synchronize through this Netlify site.';
+               if (roomId) { $('join-url').value = pageURL('student'); renderQR($('join-url').value); }
+               if (!$('connect-dialog').open) $('connect-dialog').showModal();
+          }
+          $('create-session').onclick = createSession;
+          $('close-session').onclick = async () => { try { await mutate('close'); toast('Session closed. Existing questions are preserved.'); } catch (error) { toast(error.message); } };
+          $('reopen-session').onclick = async () => { try { await mutate('open'); toast('Session reopened.'); } catch (error) { toast(error.message); } };
+          $('help').onclick = showConnect; $('join').onclick = showConnect; $('student-help').onclick = showConnect; $('close-dialog').onclick = () => $('connect-dialog').close(); $('connect-dialog').onclick = e => { if (e.target === $('connect-dialog')) { const r = e.target.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) e.target.close() } };
+          $('copy-link').onclick = async () => { try { await navigator.clipboard.writeText($('join-url').value); toast('Address copied.') } catch { $('join-url').select(); toast('Select and copy the address above.') } };
+          window.addEventListener('beforeunload', () => { stopCamera(); releaseFile(); clearTimeout(pollTimer); });
+          $('display-view').hidden = view !== 'display'; $('student-view').hidden = view !== 'student'; $('nav-' + view).classList.add('active');
+          $('nav-display').href = pageURL('display'); $('nav-student').href = pageURL('student'); document.querySelector('.brand').href = pageURL('display');
+          const savedDraft = readStore(draftKey(), null);
+          if (savedDraft && typeof savedDraft.text === 'string') { $('comment-input').value = savedDraft.text; if (savedDraft.id) $('comment-input').dataset.draftId = savedDraft.id; }
+          $('copy-link').disabled = !$('join-url').value; $('launch-phone').disabled = !$('join-url').value;
+          switchSource('slide'); applyPreferences(); render(); updateRoomUI(); schedulePoll(0);
+     </script>
+</body>
+
+</html>

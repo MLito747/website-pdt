@@ -1,0 +1,17 @@
+{
+  "name": "ruang-pdt06-netlify",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "npx --yes netlify-cli@27.16.2 dev --offline",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@netlify/blobs": "11.1.7",
+    "qrcode-generator": "2.0.4"
+  }
+}
