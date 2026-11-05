@@ -1711,6 +1711,7 @@
           const $ = id => document.getElementById(id);
           const params = new URLSearchParams(location.search), view = params.get('view') === 'student' ? 'student' : 'display';
           const SETTINGS = 'ruang-pdt06-display-v1';
+          const ACTIVE_ROOM_KEY = 'ruang-pdt06-active-room-v1';
           let questions = [], currentId = null, stream = null, cameraToken = 0, source = 'slide', localURL = null, historyOpen = false;
           const API_URL = new URL('/.netlify/functions/api', location.origin);
           let roomId = params.get('room') || '', ownerToken = '', roomOwner = false, roomOpen = false, roomKnown = false;
@@ -1725,6 +1726,14 @@
           function draftKey() { return 'ruang-draft-v1-' + (roomId || 'no-room') }
           function ownerKey(id) { return 'ruang-owner-token-v1-' + id }
           function loadOwnerToken(id) { try { return id ? localStorage.getItem(ownerKey(id)) || '' : '' } catch { return '' } }
+          function loadActiveRoomId() {
+               try {
+                    const id = localStorage.getItem(ACTIVE_ROOM_KEY) || '';
+                    return /^[a-f0-9]{36}$/.test(id) ? id : '';
+               } catch { return ''; }
+          }
+          function saveActiveRoomId(id) { try { localStorage.setItem(ACTIVE_ROOM_KEY, id); return true } catch { return false } }
+          if (view === 'display' && !roomId) roomId = loadActiveRoomId();
           ownerToken = loadOwnerToken(roomId);
           function setConnectionState(state, message) {
                connectionState = state;
@@ -1742,6 +1751,7 @@
                roomId = id; const url = new URL(location.href); url.searchParams.set('view', view);
                if (id) url.searchParams.set('room', id); else url.searchParams.delete('room');
                try { history.replaceState(null, '', url); } catch { }
+               if (view === 'display' && id) saveActiveRoomId(id);
                $('session-info').hidden = !id;
                if (id) { $('join-url').value = pageURL('student', id); renderQR($('join-url').value); }
                $('copy-link').disabled = !id; $('launch-phone').disabled = !id;
@@ -1866,6 +1876,7 @@
                     roomId = result.room.id; ownerToken = result.ownerToken;
                     let saved = true;
                     try { localStorage.setItem(ownerKey(roomId), ownerToken); } catch { saved = false; }
+                    saved = saveActiveRoomId(roomId) && saved;
                     setRoomAddress(roomId); applyRoomState(result.room); roomKnown = true; roomOwner = true; roomOpen = true;
                     $('connection-explanation').textContent = 'Room created. Share the QR code or student link; questions appear here on the projector.';
                     updateRoomUI(); schedulePoll(0);
